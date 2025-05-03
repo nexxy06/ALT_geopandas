@@ -1,0 +1,6 @@
+object 747d66ee6fcf00b819c08f11ecded53736c4652b
+type commit
+tag v1.0.1
+tagger Martin Fleischmann <martin@martinfleischmann.net> 1719923139 +0200
+
+Version 1.0.1
