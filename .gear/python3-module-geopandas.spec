@@ -7,7 +7,7 @@
 %endif
 
 Name: python3-module-%pypi_name
-Version: 1.1.0
+Version: 1.1.1
 Release: alt1
 
 Summary: Python tools for geographic data
@@ -37,9 +37,9 @@ BuildRequires: python3-module-sqlalchemy
 BuildRequires: python3-module-scipy
 BuildRequires: python3-module-pyproj
 BuildRequires: proj
-BuildRequires: python3-module-matplotlib
 BuildRequires: python3-module-psycopg2
 BuildRequires: python3-module-pyarrow
+BuildRequires: mapclassify
 %endif
 
 %description
@@ -90,6 +90,9 @@ and not test_predicates_vector_vector[geom_almost_equals-args10]"
 %python3_sitelibdir/%pypi_name/conftest.py
 
 %changelog
+* Mon Jun 30 2025 Anton Vyatkin <toni@altlinux.org> 1.1.1-alt1
+- New version 1.1.1.
+
 * Mon Jun 02 2025 Anton Vyatkin <toni@altlinux.org> 1.1.0-alt1
 - New version 1.1.0.
 
