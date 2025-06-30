@@ -1,5 +1,13 @@
 # Changelog
 
+## Version 1.1.1 (June 27, 2025)
+
+Bug fixes:
+
+- Fix regression in the GeoDataFrame constructor when np.nan is given as an only geometry (#3591).
+- Fix regression in `overlay` with `how="identity"` when input dataframes have column
+  names that are equal (#3596).
+
 ## Version 1.1.0 (June 1, 2025)
 
 Notes on dependencies:
