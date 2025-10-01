@@ -1,2 +1,3 @@
 tar: v@version@:. name=geopandas-@version@ base=geopandas-@version@
 spec: .gear/python3-module-geopandas.spec
+copy?: .gear/*.patch

@@ -1,0 +1,396 @@
+From 4ea1929dc24d6cb39431f219511d53a120300b39 Mon Sep 17 00:00:00 2001
+From: Matt Richards <mrichards7@outlook.com.au>
+Date: Mon, 8 Sep 2025 21:05:26 +1000
+Subject: [PATCH 01/12] fix first coord
+
+---
+ geopandas/tests/test_geom_methods.py | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/geopandas/tests/test_geom_methods.py b/geopandas/tests/test_geom_methods.py
+index 866faff5d2..4c55e1cbfc 100644
+--- a/geopandas/tests/test_geom_methods.py
++++ b/geopandas/tests/test_geom_methods.py
+@@ -1614,13 +1614,17 @@ def test_minimum_bounding_circle(self):
+     @pytest.mark.skipif(not SHAPELY_GE_21, reason="requires shapely 2.1")
+     def test_maximum_inscribed_circle(self):
+         mic = self.g1.maximum_inscribed_circle()
+-        expected = GeoSeries(
+-            [
++        if shapely.geos_version >= (3, 14, 0):
++            expected = [
++                LineString([(0.70703125, 0.29296875), (0.7071067811865475, 0)]),
++                LineString([(0.5, 0.5), (0.5, 0)]),
++            ]
++        else:
++            expected = [
+                 LineString([(0.70703125, 0.29296875), (0.5, 0.5)]),
+                 LineString([(0.5, 0.5), (0.5, 0)]),
+             ]
+-        )
+-        assert_geoseries_equal(mic, expected)
++        assert_geoseries_equal(mic, GeoSeries(expected))
+ 
+         mic_tolerance = self.g1.maximum_inscribed_circle(tolerance=np.array([10, 0]))
+         expected_tol = GeoSeries(
+
+From f3222c2993317486c971a63866d8582e88171dad Mon Sep 17 00:00:00 2001
+From: Matt Richards <mrichards7@outlook.com.au>
+Date: Mon, 8 Sep 2025 21:13:35 +1000
+Subject: [PATCH 02/12] fix
+
+---
+ geopandas/tests/test_geom_methods.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/geopandas/tests/test_geom_methods.py b/geopandas/tests/test_geom_methods.py
+index 4c55e1cbfc..7cc2dc37a0 100644
+--- a/geopandas/tests/test_geom_methods.py
++++ b/geopandas/tests/test_geom_methods.py
+@@ -1616,7 +1616,7 @@ def test_maximum_inscribed_circle(self):
+         mic = self.g1.maximum_inscribed_circle()
+         if shapely.geos_version >= (3, 14, 0):
+             expected = [
+-                LineString([(0.70703125, 0.29296875), (0.7071067811865475, 0)]),
++                LineString([(0.70710678, 0.29289322), (0.70710678, 0)]),
+                 LineString([(0.5, 0.5), (0.5, 0)]),
+             ]
+         else:
+
+From 876c0816ff9785b9ae788e0da5fae86e00a19345 Mon Sep 17 00:00:00 2001
+From: Matt Richards <mrichards7@outlook.com.au>
+Date: Mon, 8 Sep 2025 21:35:03 +1000
+Subject: [PATCH 03/12] unround
+
+---
+ geopandas/tests/test_geom_methods.py | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/geopandas/tests/test_geom_methods.py b/geopandas/tests/test_geom_methods.py
+index 7cc2dc37a0..319158df24 100644
+--- a/geopandas/tests/test_geom_methods.py
++++ b/geopandas/tests/test_geom_methods.py
+@@ -1615,8 +1615,11 @@ def test_minimum_bounding_circle(self):
+     def test_maximum_inscribed_circle(self):
+         mic = self.g1.maximum_inscribed_circle()
+         if shapely.geos_version >= (3, 14, 0):
++            # https://github.com/libgeos/geos/issues/1265
+             expected = [
+-                LineString([(0.70710678, 0.29289322), (0.70710678, 0)]),
++                LineString(
++                    [(0.7071067811865475, 0.2928932188134525), (0.7071067811865475, 0)]
++                ),
+                 LineString([(0.5, 0.5), (0.5, 0)]),
+             ]
+         else:
+
+From f11680597276312bc883cca7162a195d576b8c89 Mon Sep 17 00:00:00 2001
+From: Matt Richards <mrichards7@outlook.com.au>
+Date: Mon, 8 Sep 2025 21:41:35 +1000
+Subject: [PATCH 04/12] coord 2
+
+---
+ geopandas/tests/test_geom_methods.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/geopandas/tests/test_geom_methods.py b/geopandas/tests/test_geom_methods.py
+index 319158df24..096699d60c 100644
+--- a/geopandas/tests/test_geom_methods.py
++++ b/geopandas/tests/test_geom_methods.py
+@@ -1620,7 +1620,7 @@ def test_maximum_inscribed_circle(self):
+                 LineString(
+                     [(0.7071067811865475, 0.2928932188134525), (0.7071067811865475, 0)]
+                 ),
+-                LineString([(0.5, 0.5), (0.5, 0)]),
++                LineString([(0.5000000000000001, 0.5), (1, 0.5)]),
+             ]
+         else:
+             expected = [
+
+From 917e98fd7ffca43be747d2108c2bf9d9fbf8c2d8 Mon Sep 17 00:00:00 2001
+From: Matt Richards <mrichards7@outlook.com.au>
+Date: Mon, 8 Sep 2025 21:55:53 +1000
+Subject: [PATCH 05/12] fix which seems to lose tolerance
+
+---
+ geopandas/tests/test_geom_methods.py | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/geopandas/tests/test_geom_methods.py b/geopandas/tests/test_geom_methods.py
+index 096699d60c..859af9c497 100644
+--- a/geopandas/tests/test_geom_methods.py
++++ b/geopandas/tests/test_geom_methods.py
+@@ -1630,13 +1630,20 @@ def test_maximum_inscribed_circle(self):
+         assert_geoseries_equal(mic, GeoSeries(expected))
+ 
+         mic_tolerance = self.g1.maximum_inscribed_circle(tolerance=np.array([10, 0]))
+-        expected_tol = GeoSeries(
+-            [
+-                LineString([(0.75, 0.5), (0.625, 0.625)]),
++        if shapely.geos_version >= (3, 14, 0):
++            # https://github.com/libgeos/geos/issues/1265
++            expected_tol = [
++                LineString(
++                    [(0.7071067811865475, 0.2928932188134525), (0.7071067811865475, 0)]
++                ),
++                LineString([(0.5000000000000001, 0.5), (1, 0.5)]),
++            ]
++        else:
++            expected_tol = [
++                LineString([(0.70703125, 0.29296875), (0.5, 0.5)]),
+                 LineString([(0.5, 0.5), (0.5, 0)]),
+             ]
+-        )
+-        assert_geoseries_equal(mic_tolerance, expected_tol)
++        assert_geoseries_equal(mic_tolerance, GeoSeries(expected_tol))
+ 
+     def test_total_bounds(self):
+         bbox = self.sol.x, self.sol.y, self.esb.x, self.esb.y
+
+From 67dfbc3dfd4aef7a41c5a650351255f6a99da986 Mon Sep 17 00:00:00 2001
+From: Matt Richards <mrichards7@outlook.com.au>
+Date: Mon, 8 Sep 2025 22:03:17 +1000
+Subject: [PATCH 06/12] fix
+
+---
+ geopandas/tests/test_geom_methods.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/geopandas/tests/test_geom_methods.py b/geopandas/tests/test_geom_methods.py
+index 859af9c497..356039706a 100644
+--- a/geopandas/tests/test_geom_methods.py
++++ b/geopandas/tests/test_geom_methods.py
+@@ -1640,7 +1640,7 @@ def test_maximum_inscribed_circle(self):
+             ]
+         else:
+             expected_tol = [
+-                LineString([(0.70703125, 0.29296875), (0.5, 0.5)]),
++                LineString([(0.75, 0.5), (0.625, 0.625)]),
+                 LineString([(0.5, 0.5), (0.5, 0)]),
+             ]
+         assert_geoseries_equal(mic_tolerance, GeoSeries(expected_tol))
+
+From 1cb59d6e3f1d5c804581052b95852b514cce3d2b Mon Sep 17 00:00:00 2001
+From: Matt Richards <mrichards7@outlook.com.au>
+Date: Mon, 22 Sep 2025 21:16:38 +1000
+Subject: [PATCH 07/12] 3.14 passing values on windows
+
+---
+ geopandas/tests/test_geom_methods.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/geopandas/tests/test_geom_methods.py b/geopandas/tests/test_geom_methods.py
+index 356039706a..2f7b15c3b6 100644
+--- a/geopandas/tests/test_geom_methods.py
++++ b/geopandas/tests/test_geom_methods.py
+@@ -1620,7 +1620,7 @@ def test_maximum_inscribed_circle(self):
+                 LineString(
+                     [(0.7071067811865475, 0.2928932188134525), (0.7071067811865475, 0)]
+                 ),
+-                LineString([(0.5000000000000001, 0.5), (1, 0.5)]),
++                LineString([(0.5, 0.5), (0, 0.5)]),
+             ]
+         else:
+             expected = [
+@@ -1636,7 +1636,7 @@ def test_maximum_inscribed_circle(self):
+                 LineString(
+                     [(0.7071067811865475, 0.2928932188134525), (0.7071067811865475, 0)]
+                 ),
+-                LineString([(0.5000000000000001, 0.5), (1, 0.5)]),
++                LineString([(0.5, 0.5), (0, 0.5)]),
+             ]
+         else:
+             expected_tol = [
+
+From c83ade0c551932b021b3dd58ef6bc006c77f07dc Mon Sep 17 00:00:00 2001
+From: Matt Richards <mrichards7@outlook.com.au>
+Date: Mon, 22 Sep 2025 21:28:36 +1000
+Subject: [PATCH 08/12] Revert "3.14 passing values on windows"
+
+This reverts commit 1cb59d6e3f1d5c804581052b95852b514cce3d2b.
+---
+ geopandas/tests/test_geom_methods.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/geopandas/tests/test_geom_methods.py b/geopandas/tests/test_geom_methods.py
+index 2f7b15c3b6..356039706a 100644
+--- a/geopandas/tests/test_geom_methods.py
++++ b/geopandas/tests/test_geom_methods.py
+@@ -1620,7 +1620,7 @@ def test_maximum_inscribed_circle(self):
+                 LineString(
+                     [(0.7071067811865475, 0.2928932188134525), (0.7071067811865475, 0)]
+                 ),
+-                LineString([(0.5, 0.5), (0, 0.5)]),
++                LineString([(0.5000000000000001, 0.5), (1, 0.5)]),
+             ]
+         else:
+             expected = [
+@@ -1636,7 +1636,7 @@ def test_maximum_inscribed_circle(self):
+                 LineString(
+                     [(0.7071067811865475, 0.2928932188134525), (0.7071067811865475, 0)]
+                 ),
+-                LineString([(0.5, 0.5), (0, 0.5)]),
++                LineString([(0.5000000000000001, 0.5), (1, 0.5)]),
+             ]
+         else:
+             expected_tol = [
+
+From 0b86a0f2b32bb25f9187816fc40bc6c57b8f9e9f Mon Sep 17 00:00:00 2001
+From: Joris Van den Bossche <jorisvandenbossche@gmail.com>
+Date: Mon, 22 Sep 2025 14:06:06 +0200
+Subject: [PATCH 09/12] attempt for more robust test
+
+---
+ geopandas/tests/test_geom_methods.py | 47 ++++++++++------------------
+ 1 file changed, 17 insertions(+), 30 deletions(-)
+
+diff --git a/geopandas/tests/test_geom_methods.py b/geopandas/tests/test_geom_methods.py
+index 356039706a..053b4c0a2c 100644
+--- a/geopandas/tests/test_geom_methods.py
++++ b/geopandas/tests/test_geom_methods.py
+@@ -1613,37 +1613,24 @@ def test_minimum_bounding_circle(self):
+ 
+     @pytest.mark.skipif(not SHAPELY_GE_21, reason="requires shapely 2.1")
+     def test_maximum_inscribed_circle(self):
+-        mic = self.g1.maximum_inscribed_circle()
+-        if shapely.geos_version >= (3, 14, 0):
+-            # https://github.com/libgeos/geos/issues/1265
+-            expected = [
+-                LineString(
+-                    [(0.7071067811865475, 0.2928932188134525), (0.7071067811865475, 0)]
+-                ),
+-                LineString([(0.5000000000000001, 0.5), (1, 0.5)]),
+-            ]
+-        else:
+-            expected = [
+-                LineString([(0.70703125, 0.29296875), (0.5, 0.5)]),
+-                LineString([(0.5, 0.5), (0.5, 0)]),
+-            ]
+-        assert_geoseries_equal(mic, GeoSeries(expected))
+-
+-        mic_tolerance = self.g1.maximum_inscribed_circle(tolerance=np.array([10, 0]))
+-        if shapely.geos_version >= (3, 14, 0):
+-            # https://github.com/libgeos/geos/issues/1265
+-            expected_tol = [
+-                LineString(
+-                    [(0.7071067811865475, 0.2928932188134525), (0.7071067811865475, 0)]
+-                ),
+-                LineString([(0.5000000000000001, 0.5), (1, 0.5)]),
+-            ]
+-        else:
+-            expected_tol = [
+-                LineString([(0.75, 0.5), (0.625, 0.625)]),
+-                LineString([(0.5, 0.5), (0.5, 0)]),
++        gs = GeoSeries(
++            [
++                Polygon([(0, 0), (1, 0), (1, 1), (0, 1)]),
++                Polygon([(0, 0), (0.5, -1), (1, 0), (1, 1), (-0.5, 0.5)]),
+             ]
+-        assert_geoseries_equal(mic_tolerance, GeoSeries(expected_tol))
++        )
++        mic = gs.maximum_inscribed_circle()
++        assert (mic.geom_type == "LineString").all()
++        assert (shapely.get_num_points(mic) == 2).all()
++        expected_centers = GeoSeries([Point(0.5, 0.5), Point(0.466796875, 0.259765625)])
++        expected_length = Series([0.5, 0.533203125])
++        assert_geoseries_equal(shapely.get_point(mic, 0), expected_centers)
++        assert_series_equal(shapely.length(mic), expected_length)
++
++        # with tolerance for second polygon -> stops earlier with smaller circle, thus
++        # just assert the length of the resulting line is lower
++        mic_tolerance = gs.maximum_inscribed_circle(tolerance=np.array([0, 10]))
++        assert (shapely.length(mic_tolerance) <= 0.5).all()
+ 
+     def test_total_bounds(self):
+         bbox = self.sol.x, self.sol.y, self.esb.x, self.esb.y
+
+From dd8c3f96da9e84ee6cab9a414c1aba17b49b1ea1 Mon Sep 17 00:00:00 2001
+From: Joris Van den Bossche <jorisvandenbossche@gmail.com>
+Date: Mon, 22 Sep 2025 14:14:24 +0200
+Subject: [PATCH 10/12] check_less_precise
+
+---
+ geopandas/tests/test_geom_methods.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/geopandas/tests/test_geom_methods.py b/geopandas/tests/test_geom_methods.py
+index 053b4c0a2c..c5d597bbc6 100644
+--- a/geopandas/tests/test_geom_methods.py
++++ b/geopandas/tests/test_geom_methods.py
+@@ -1624,7 +1624,9 @@ def test_maximum_inscribed_circle(self):
+         assert (shapely.get_num_points(mic) == 2).all()
+         expected_centers = GeoSeries([Point(0.5, 0.5), Point(0.466796875, 0.259765625)])
+         expected_length = Series([0.5, 0.533203125])
+-        assert_geoseries_equal(shapely.get_point(mic, 0), expected_centers)
++        assert_geoseries_equal(
++            shapely.get_point(mic, 0), expected_centers, check_less_precise=True
++        )
+         assert_series_equal(shapely.length(mic), expected_length)
+ 
+         # with tolerance for second polygon -> stops earlier with smaller circle, thus
+
+From 14795bd5a20c1b65fa5a96b74436dbb8a8a00f5f Mon Sep 17 00:00:00 2001
+From: Joris Van den Bossche <jorisvandenbossche@gmail.com>
+Date: Mon, 22 Sep 2025 14:27:55 +0200
+Subject: [PATCH 11/12] update docstring
+
+---
+ geopandas/base.py | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/geopandas/base.py b/geopandas/base.py
+index 32bbc8f21a..60a9cdb7d5 100644
+--- a/geopandas/base.py
++++ b/geopandas/base.py
+@@ -1888,7 +1888,7 @@ def maximum_inscribed_circle(self, *, tolerance=None):
+         >>> s = geopandas.GeoSeries(
+         ...     [
+         ...         Polygon([(0, 0), (1, 1), (0, 1), (0, 0)]),
+-        ...         Polygon([(0, 0), (10, 10), (0, 10), (0, 0)]),
++        ...         Polygon([(0, 0), (0.5, -1), (1, 0), (1, 1), (-0.5, 0.5)]),
+         ...     ]
+         ... )
+         >>> s
+@@ -1897,13 +1897,13 @@ def maximum_inscribed_circle(self, *, tolerance=None):
+         dtype: geometry
+ 
+         >>> s.maximum_inscribed_circle()
+-        0    LINESTRING (0.29297 0.70703, 0.5 0.5)
+-        1        LINESTRING (2.92969 7.07031, 5 5)
++        0    LINESTRING (0.29289 0.70711, 0.5 0.5)
++        1    LINESTRING (0.4668 0.25977, 1 0.25977)
+         dtype: geometry
+ 
+         >>> s.maximum_inscribed_circle(tolerance=2)
+-        0    LINESTRING (0.25 0.5, 0.375 0.375)
+-        1          LINESTRING (2.5 7.5, 2.5 10)
++        0    LINESTRING (0.29289 0.70711, 0.5 0.5)
++        1             LINESTRING (0.375 0.25, 0 0)
+         dtype: geometry
+ 
+         See Also
+
+From 5ffa9cc057d0b34874e83ad003033df8e1d1fe74 Mon Sep 17 00:00:00 2001
+From: Joris Van den Bossche <jorisvandenbossche@gmail.com>
+Date: Mon, 22 Sep 2025 14:33:53 +0200
+Subject: [PATCH 12/12] fixup docstring
+
+---
+ geopandas/base.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/geopandas/base.py b/geopandas/base.py
+index 60a9cdb7d5..a37e1e0214 100644
+--- a/geopandas/base.py
++++ b/geopandas/base.py
+@@ -1892,8 +1892,8 @@ def maximum_inscribed_circle(self, *, tolerance=None):
+         ...     ]
+         ... )
+         >>> s
+-        0       POLYGON ((0 0, 1 1, 0 1, 0 0))
+-        1    POLYGON ((0 0, 10 10, 0 10, 0 0))
++        0                      POLYGON ((0 0, 1 1, 0 1, 0 0))
++        1    POLYGON ((0 0, 0.5 -1, 1 0, 1 1, -0.5 0.5, 0 0))
+         dtype: geometry
+ 
+         >>> s.maximum_inscribed_circle()
