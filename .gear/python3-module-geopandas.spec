@@ -19,6 +19,7 @@ Vcs: https://github.com/geopandas/geopandas
 BuildArch: noarch
 
 Source: %pypi_name-%version.tar
+Patch: geopandas-1.1.1-test-fix.patch
 
 BuildRequires(pre): rpm-build-python3
 BuildRequires: python3-module-setuptools
@@ -57,6 +58,7 @@ This package contains tests for geopandas.
 
 %prep
 %setup -n %pypi_name-%version
+%patch -p1
 
 # do not use versioneer
 sed -i 's/^dynamic = \["version"\]$/version = "%version"/' pyproject.toml
